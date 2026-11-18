@@ -33,6 +33,7 @@ reports/eda/trip_*/labels.csv
 # Local model runs and weights
 /reports/model-training/
 /reports/model-training-smoke/
+/reports/model-tuning/
 *.joblib
 *.pkl
 

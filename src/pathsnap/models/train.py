@@ -9,7 +9,6 @@ from importlib.metadata import version
 from pathlib import Path
 from time import perf_counter
 
-import joblib
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
@@ -21,7 +20,7 @@ from pathsnap.data.labels import (
     attach_training_target,
     derive_observation_labels,
 )
-from pathsnap.data.reader import discover_trips, load_trip
+from pathsnap.data.reader import discover_trips, load_trip_files
 from pathsnap.data.splits import DEV_PARTITIONS_FOR_FITTING, trip_group_folds
 from pathsnap.features.candidates import (
     FEATURE_COLUMNS,
@@ -30,15 +29,17 @@ from pathsnap.features.candidates import (
     build_candidates,
 )
 
+from .artifact import save_model_artifact
 from .estimators import candidate_models
 from .evaluation import OBS_KEY, evaluate
 
 
-def prepare_partition(root: Path, trip_ids: list[str], config: CandidateConfig):
+def prepare_partition(trips: dict[str, dict], trip_ids: list[str], config: CandidateConfig):
     observation_frames, candidate_frames = [], []
     for trip_id in trip_ids:
         print(f"Preparing trip {trip_id}", flush=True)
-        trip = load_trip(root, trip_id)
+        info = trips[trip_id]
+        trip = load_trip_files(trip_id, info["partition"], info["files"], include_route=True)
         observations, candidates = build_candidates(trip.without_route(), config)
         labels = derive_observation_labels(trip)
         reference = labels[OBS_KEY + ["label_arc_id", "label_status"]]
@@ -95,8 +96,8 @@ def run(root: Path, out: Path, folds: int, seed: int, jobs: int, limit: int | No
             raise ValueError(f"Trip {trip_id} is missing its reference route.")
 
     config = CandidateConfig()
-    obs_train, rows_train = prepare_partition(root, train_ids, config)
-    obs_student, rows_student = prepare_partition(root, student_ids, config)
+    obs_train, rows_train = prepare_partition(trips, train_ids, config)
+    obs_student, rows_student = prepare_partition(trips, student_ids, config)
     splits = []
     for fit_idx, val_idx in trip_group_folds(obs_train, n_splits=folds, seed=seed):
         fit_trips = sorted(obs_train.iloc[fit_idx]["trip_id"].unique())
@@ -144,12 +145,7 @@ def run(root: Path, out: Path, folds: int, seed: int, jobs: int, limit: int | No
             "student_test": score_model(estimator, rows_student, obs_student),
             "artifact": model_file,
         }
-        joblib.dump({
-            "estimator": estimator,
-            "feature_columns": FEATURE_COLUMNS,
-            "feature_schema_version": FEATURE_SCHEMA_VERSION,
-            "candidate_config": asdict(config),
-        }, out / model_file)
+        save_model_artifact(out / model_file, estimator, config)
 
     with (out / "metrics.json").open("w", encoding="utf-8") as stream:
         json.dump({**run_info, "models": results}, stream, indent=2, allow_nan=False)
