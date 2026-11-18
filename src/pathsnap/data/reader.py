@@ -87,15 +87,17 @@ def _partition_of(path: Path, root: Path) -> str:
     return rel.parts[0].lower() if len(rel.parts) > 1 else "unknown"
 
 
-def discover_trips(root: str | Path) -> dict[str, dict]:
+def discover_trips(root: str | Path, *, partition: str | None = None) -> dict[str, dict]:
     """Find trips under ``root`` by grouping files that share a stem in one directory.
 
     Returns {trip_id: {"partition": str, "files": {ext: Path}}}.
-    Partition = first directory under root (lower-cased). Nothing about counts is assumed.
+    Partition = first directory under root (lower-cased). Pass its directory name
+    to scan just that partition. Nothing about counts is assumed.
     """
     root = Path(root)
     found: dict[str, dict] = {}
-    for path in sorted(root.rglob("*")):
+    search_root = root if partition is None else root / partition
+    for path in sorted(search_root.rglob("*")):
         ext = path.suffix.lstrip(".").lower()
         if not path.is_file() or ext not in EXTENSIONS:
             continue
@@ -114,11 +116,17 @@ def load_trip(root: str | Path, trip_id: str, include_route: bool = True) -> Tri
     if trip_id not in trips:
         raise KeyError(f"Trip {trip_id!r} not found under {root}")
     info = trips[trip_id]
-    files = info["files"]
+    return load_trip_files(trip_id, info["partition"], info["files"], include_route=include_route)
+
+
+def load_trip_files(
+    trip_id: str, partition: str, files: dict[str, Path], *, include_route: bool,
+) -> Trip:
+    """Read an already discovered trip, optionally including its scoring reference."""
     missing = [e for e in ("track", "nodes", "arcs") if e not in files]
     if missing:
         raise FileNotFoundError(f"Trip {trip_id} missing required files: {missing}")
     route = read_route(files["route"]) if include_route and "route" in files else None
     kept = dict(files) if include_route else {k: v for k, v in files.items() if k != "route"}
-    return Trip(trip_id, info["partition"], read_track(files["track"]),
+    return Trip(trip_id, partition, read_track(files["track"]),
                 read_nodes(files["nodes"]), read_arcs(files["arcs"]), route, kept)

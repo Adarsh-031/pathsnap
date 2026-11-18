@@ -7,10 +7,9 @@ from dataclasses import asdict
 import json
 from pathlib import Path
 
-from joblib import load
-
 from pathsnap.data.reader import load_trip
-from pathsnap.features.candidates import FEATURE_COLUMNS, FEATURE_SCHEMA_VERSION, CandidateConfig
+from pathsnap.features.candidates import CandidateConfig
+from pathsnap.models.artifact import load_model_artifact
 from .hmm import reconstruct_route
 
 
@@ -24,12 +23,10 @@ def main(argv=None) -> None:
     classifier = None
     candidate_config = CandidateConfig()
     if args.model is not None:
-        artifact = load(args.model)
-        if (artifact["feature_schema_version"] != FEATURE_SCHEMA_VERSION
-                or artifact["feature_columns"] != FEATURE_COLUMNS):
-            parser.error("Model artifact feature schema does not match this version of PathSnap")
-        classifier = artifact["estimator"]
-        candidate_config = CandidateConfig(**artifact["candidate_config"])
+        try:
+            classifier, candidate_config = load_model_artifact(args.model)
+        except ValueError as error:
+            parser.error(str(error))
 
     trip = load_trip(args.root, args.trip, include_route=False)
     result = reconstruct_route(trip, classifier=classifier, candidate_config=candidate_config)

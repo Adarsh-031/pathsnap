@@ -48,6 +48,49 @@ An observation without candidates has null arc and section IDs. Each section lis
 the traversed arc IDs, including connecting arcs between observations. The inference
 command uses the GPS track and road network.
 
+## Run the FastAPI backend on Laptop 1
+
+From the repository root, point the server at the supplied data directory and a
+trusted fitted PathSnap artifact. Use the same model library versions as the
+training run. The `models` extra installs the libraries used by the five-model
+training command.
+
+```sh
+uv sync --locked --extra api --extra models
+export PATHSNAP_DATA_ROOT="/path/to/Student folder"
+export PATHSNAP_MODEL="/path/to/model.joblib"
+uv run --locked --extra api --extra models uvicorn pathsnap.api:app --host 0.0.0.0 --port 8000
+```
+
+The active partition defaults to `student_test` for rehearsal. For authorized
+evaluation, set `PATHSNAP_DATA_ROOT` to the organizer-provided dataset root and
+`PATHSNAP_TRIP_PARTITION` to the name of its evaluator partition directory, then
+restart the server. The active partition contains the per-trip `.track`,
+`.nodes`, `.arcs`, and `.route` files. Configure Laptop 2's UI adapter with
+`http://<laptop-1-lan-ip>:8000` as its backend URL.
+
+```sh
+curl --fail-with-body http://localhost:8000/health
+curl --fail-with-body http://localhost:8000/trips
+curl --fail-with-body http://localhost:8000/predict \
+  -H 'Content-Type: application/json' --data '{"trip_id":"00000000"}'
+```
+
+Use an ID returned by `/trips`. The API returns predicted GeoJSON geometry, with
+longitude before latitude and a separate line for each decoded section. It
+derives scoring labels from the reference route on Laptop 1 after decoding and
+reports the fraction of `ok` observations matched to the exact directed arc.
+Unmatched scorable observations count as incorrect. Inference time covers
+classifier scoring and decoding. Total processing time also covers loading,
+candidate generation, GeoJSON assembly, and scoring. Both are in milliseconds.
+
+OpenAPI is available at `/docs`. Requests for IDs outside the active partition
+return `404`. Invalid requests or trips with no drawable route or scorable
+observations return `422`. The server returns `503` when inference is unavailable.
+Check the server log and restart after fixing any startup configuration or
+artifact errors. Run the backend tests with
+`uv run --locked --extra api pytest`.
+
 ## Decoder
 
 Each hidden state is a candidate directed arc and the observation's projected

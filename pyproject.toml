@@ -17,6 +17,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28",
     "pytest>=8",
 ]
 
@@ -24,6 +25,11 @@ dev = [
 pathsnap = "pathsnap:main"
 
 [project.optional-dependencies]
+api = [
+    "fastapi>=0.115",
+    "pydantic>=2",
+    "uvicorn>=0.34",
+]
 models = [
     "catboost>=1.2.10",
     "joblib>=1.6.0",
