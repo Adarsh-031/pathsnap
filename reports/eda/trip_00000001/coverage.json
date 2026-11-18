@@ -1,0 +1,30 @@
+{
+  "config": {
+    "radius_m": 50.0,
+    "max_candidates": 8,
+    "heading_min_move_m": 2.0,
+    "gap_threshold_s": 5.0
+  },
+  "labels": {
+    "trip_id": "00000001",
+    "n_obs": 1315,
+    "n_route": 525,
+    "label_ok": 990,
+    "label_ambiguous": 325,
+    "label_far": 0,
+    "near_route_boundary": 211,
+    "route_positions_with_no_obs": 67,
+    "label_dist_median_m": 4.297890944487205,
+    "label_dist_p95_m": 12.406135735257786,
+    "label_dist_max_m": 27.215522733776663
+  },
+  "coverage": {
+    "n_labelled": 1315,
+    "miss_count_all": 2,
+    "miss_rate_all": 0.001520912547528517,
+    "label_is_rank0_all": 0.7954372623574144,
+    "miss_count_ok_only": 0,
+    "miss_rate_ok_only": 0.0,
+    "label_is_rank0_ok_only": 0.9363636363636364
+  }
+}
