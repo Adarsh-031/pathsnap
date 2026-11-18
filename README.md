@@ -15,6 +15,8 @@ The command fits LightGBM, CatBoost, XGBoost, Random Forest, and Logistic Regres
 
 The default output directory is `reports/model-training/`. It contains the five fitted estimators and `metrics.json` with model settings, package versions, trip assignments, fit and inference times, and metrics for each validation fold and the student-test partition. Use `--out` to retain separate runs.
 
+See the [five-model student-test comparison](reports/test-evaluation/five-models/README.md) for measured results before and after HMM decoding.
+
 Compare `ok.top1_accuracy` against `ok.nearest_top1_accuracy` for the primary ranking comparison. Top-1 accuracy counts every labelled observation, including candidate misses and observations without candidates. Candidate classification metrics use a probability threshold of 0.5. Direct continuity measures whether adjacent scored observations within a GPS segment choose the same arc or connected arcs. The run ends at independent candidate scoring, before sequential route decoding.
 
 For a quick run on a few trips:
@@ -90,6 +92,16 @@ the traversed arc IDs, including connecting arcs between observations. The infer
 command uses the GPS track and road network.
 
 ## Run the FastAPI backend on Laptop 1
+
+On Linux, run `./start-server.sh` from the repository root and enter
+`student_test` for rehearsal or `evaluator_test` for the evaluation. The launcher
+expects `../Student folder/student_test/` and `../evaluator_test/` alongside the
+checkout, and loads `reports/model-tuning/logistic_regression_tuned.joblib` by
+default. Set `PATHSNAP_MODEL` to an absolute path to use another fitted logistic
+regression artifact.
+On Laptop 2, use `http://<laptop-1-lan-ip>:8002` as the UI backend URL.
+
+### Manual startup
 
 From the repository root, point the server at the supplied data directory and a
 trusted fitted PathSnap artifact. Use the same model library versions as the

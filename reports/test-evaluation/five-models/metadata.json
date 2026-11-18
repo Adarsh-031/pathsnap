@@ -1,0 +1,72 @@
+{
+  "partition": "student_test",
+  "trip_ids": [
+    "00000000",
+    "00000007",
+    "00000009",
+    "00000040",
+    "00000052",
+    "00000056",
+    "00000065",
+    "00000076",
+    "00000077",
+    "00000091"
+  ],
+  "training_trips": 80,
+  "training_seed": 42,
+  "training_folds": 5,
+  "training_versions": {
+    "numpy": "2.5.5",
+    "pandas": "3.1.1",
+    "scikit-learn": "1.9.1",
+    "lightgbm": "4.7.0",
+    "catboost": "1.2.10",
+    "xgboost": "3.4.1",
+    "joblib": "1.6.0"
+  },
+  "evaluation_versions": {
+    "numpy": "2.5.5",
+    "pandas": "3.1.1",
+    "scikit-learn": "1.9.1",
+    "lightgbm": "4.7.0",
+    "catboost": "1.2.10",
+    "xgboost": "3.4.1",
+    "joblib": "1.6.0",
+    "scipy": "1.18.1",
+    "pyproj": "3.8.0"
+  },
+  "candidate_config": {
+    "radius_m": 50.0,
+    "max_candidates": 8,
+    "heading_min_move_m": 2.0,
+    "gap_threshold_s": 5.0
+  },
+  "hmm_config": {
+    "gps_sigma_m": 10.0,
+    "transition_beta_m": 20.0,
+    "max_detour_m": 100.0,
+    "backward_tolerance_m": 10.0
+  },
+  "artifacts": {
+    "LightGBM": {
+      "file": "lightgbm.joblib",
+      "sha256": "4ce2acc8e939e3fe266a986e309d7b0eac66dd1ee18fa9e72a69572e08bdf7f7"
+    },
+    "CatBoost": {
+      "file": "catboost.joblib",
+      "sha256": "08369c56b4c5b6250206669b36a4cb602eb69db8e1e11e4c02cc626086129c25"
+    },
+    "XGBoost": {
+      "file": "xgboost.joblib",
+      "sha256": "2d8f673e4cccc25b2fc65ca1797b6d4131c396a631fd5fc2f71a470a5a3edc75"
+    },
+    "Random Forest": {
+      "file": "random_forest.joblib",
+      "sha256": "77a2d89b8554bccbfd7398eeb1129a4604a2036ca3f4a2c8bacea85ccc4e03c4"
+    },
+    "Logistic Regression": {
+      "file": "logistic_regression.joblib",
+      "sha256": "29c2d2e222f8733c20f3457091a9c0ebd10914db15aedd4b4d5d325008e15a4a"
+    }
+  }
+}
