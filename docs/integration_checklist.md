@@ -2,9 +2,10 @@
 
 ## Team handoffs
 
-- [ ] **Member 1:** Share the supported trip-reader import, function signature, and return types for point, node, arc, and reference route data.
-- [ ] **Member 3:** Share the OpenAPI contract or real redacted examples for `GET /health`, `GET /trips`, and `POST /predict`, including status codes/errors, coordinate order and path breaks, metric denominators, and timing units.
-- [ ] **Member 3:** Provide the FastAPI startup command and artifact configuration, confirm access to all ten reserved trip IDs on Laptop 1, and confirm that scoring references never enter the prediction pipeline or API payloads.
+- [x] **Member 1:** Shared trip reader (`pathsnap.data.load_trip`) is on `master` and wired into the training map.
+- [x] **Member 3:** FastAPI implements the [contract](laptop1_api.md) for `GET /health`, `GET /trips`, and `POST /predict`; its response models match the Laptop 2 adapter.
+- [ ] **Member 3:** Start FastAPI with a fitted artifact and `student_test` active, share the LAN URL, and confirm successful requests log the selected trip ID.
+- [ ] **Member 3:** Confirm all ten reserved trip IDs are available on Laptop 1 for authorized evaluation and keep scoring references isolated from the prediction pipeline and API payloads.
 - [ ] **Team:** Confirm the demo network, Internet availability for the map, and the checklist for the pre-lunch evaluation.
 
 ## Rehearsal and final demonstration

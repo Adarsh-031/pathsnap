@@ -50,7 +50,7 @@ def numeric(value):
 
 def decode_trips(payload):
     if not isinstance(payload, dict) or not isinstance(payload.get("trips"), list):
-        raise BackendError("Trip list does not match the provisional API format.")
+        raise BackendError("Trip list does not match the PathSnap API format.")
     trips = payload["trips"]
     if not all(valid_id(trip_id) for trip_id in trips) or len(set(trips)) != len(trips):
         raise BackendError("Backend returned invalid or duplicate trip IDs.")
@@ -58,7 +58,7 @@ def decode_trips(payload):
 
 
 def decode_prediction(payload):
-    message = "Prediction does not match the provisional API format."
+    message = "Prediction does not match the PathSnap API format."
     if not isinstance(payload, dict) or not isinstance(payload.get("predicted_route"), dict):
         raise BackendError(message)
     geometry = payload["predicted_route"]
