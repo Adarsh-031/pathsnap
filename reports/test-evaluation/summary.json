@@ -1,0 +1,86 @@
+{
+  "artifact": "logistic_regression_tuned.joblib",
+  "artifact_sha256": "3246ec97f219c6b07db0ecfccd918d7772be37ad3c2c98ae1aa9364cb3207843",
+  "training_trips": 80,
+  "versions": {
+    "numpy": "2.5.5",
+    "pandas": "3.1.1",
+    "scipy": "1.18.1",
+    "pyproj": "3.8.0",
+    "scikit-learn": "1.9.1",
+    "joblib": "1.6.0",
+    "matplotlib": "3.11.2"
+  },
+  "candidate_config": {
+    "radius_m": 50.0,
+    "max_candidates": 8,
+    "heading_min_move_m": 2.0,
+    "gap_threshold_s": 5.0
+  },
+  "hmm_config": {
+    "gps_sigma_m": 10.0,
+    "transition_beta_m": 20.0,
+    "max_detour_m": 100.0,
+    "backward_tolerance_m": 10.0
+  },
+  "partitions": {
+    "student_test": {
+      "trips": 10,
+      "observations": 19160,
+      "scorable": 12281,
+      "ambiguous": 6731,
+      "far": 148,
+      "methods": {
+        "nearest": {
+          "correct": 7522,
+          "point_weighted_accuracy": 0.6124908395081834,
+          "mean_trip_accuracy": 0.664443714486531
+        },
+        "top1": {
+          "correct": 11646,
+          "point_weighted_accuracy": 0.9482941128572592,
+          "mean_trip_accuracy": 0.9611852874256893
+        },
+        "hmm": {
+          "correct": 11541,
+          "point_weighted_accuracy": 0.9397443204950737,
+          "mean_trip_accuracy": 0.9556563597210147
+        }
+      },
+      "mean_ordered_route_f1": {
+        "top1": 0.6272962588789434,
+        "hmm": 0.788811863222061
+      },
+      "median_inference_ms": 99.19173249727464
+    },
+    "evaluator_test": {
+      "trips": 10,
+      "observations": 19674,
+      "scorable": 12663,
+      "ambiguous": 6909,
+      "far": 102,
+      "methods": {
+        "nearest": {
+          "correct": 6606,
+          "point_weighted_accuracy": 0.5216773276474769,
+          "mean_trip_accuracy": 0.5810599536157931
+        },
+        "top1": {
+          "correct": 10726,
+          "point_weighted_accuracy": 0.8470346679301903,
+          "mean_trip_accuracy": 0.9391446341522063
+        },
+        "hmm": {
+          "correct": 11539,
+          "point_weighted_accuracy": 0.9112374634762694,
+          "mean_trip_accuracy": 0.9609426604461848
+        }
+      },
+      "mean_ordered_route_f1": {
+        "top1": 0.6446360753648388,
+        "hmm": 0.7648933691051184
+      },
+      "median_inference_ms": 71.44169800085365
+    }
+  }
+}
