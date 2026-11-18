@@ -9,6 +9,12 @@ from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 
 
+def logistic_regression(seed: int):
+    return make_pipeline(
+        StandardScaler(), LogisticRegression(C=1.0, max_iter=1000, random_state=seed),
+    )
+
+
 def candidate_models(seed: int, jobs: int) -> dict:
     return {
         "lightgbm": LGBMClassifier(
@@ -27,7 +33,5 @@ def candidate_models(seed: int, jobs: int) -> dict:
             n_estimators=150, max_depth=18, min_samples_leaf=5,
             random_state=seed, n_jobs=jobs,
         ),
-        "logistic_regression": make_pipeline(
-            StandardScaler(), LogisticRegression(C=1.0, max_iter=1000, random_state=seed),
-        ),
+        "logistic_regression": logistic_regression(seed),
     }

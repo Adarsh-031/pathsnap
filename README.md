@@ -24,6 +24,47 @@ uv run --locked --extra models python -m pathsnap.models.train --root "../Studen
   --folds 2 --trip-limit-per-partition 3 --out reports/model-training-smoke
 ```
 
+## Tune logistic regression with Bayesian optimization
+
+Logistic regression led the five-model comparison on mean training-fold top-1 accuracy.
+The tuner maximizes the same observation-level metric on `ok` labels, using five
+trip-grouped folds and fitting the scaler separately inside each fold. The search
+varies `C` from 0.001 to 1,000 on a log scale to cover strong through weak
+regularization, and varies the positive class weight from 0.5 to 2 on a log scale
+to change how much missed reference arcs cost during fitting. The negative class
+weight stays at 1. A Gaussian process models the validation scores, and expected
+improvement chooses each new setting after five initial trials, including the
+untuned baseline. Ties keep the earliest trial.
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  uv run --locked --extra models python -m pathsnap.models.tune --root "../Student folder"
+```
+
+The default run evaluates 20 settings on `train`. After selection, it refits the
+baseline and winner on all training trips and evaluates both on `student_test`.
+`reports/model-tuning/` receives the trial and fold results, candidate macro F1
+and log loss, fit and inference times, and both `.joblib` artifacts. Use a fresh
+`--out` directory for another run. Pass `logistic_regression_tuned.joblib` to the
+decoder with `--model` or to the API through `PATHSNAP_MODEL`.
+
+The [recorded run](reports/tuning/logistic_regression.json) used 80 training trips
+and 10 student-test trips. Trial 14 selected `C=1000` and a positive class weight
+of `2`, both at the upper edge of the search. Untuned and tuned results were,
+respectively:
+
+- Mean validation top-1 accuracy was 92.487% and 92.510%. Mean validation
+  candidate macro F1 was 94.867% and 94.865%.
+- Student-test top-1 accuracy was 94.724% and 94.829%. Candidate macro F1 was
+  96.611% and 96.560%, and log loss was 0.06232 and 0.06622.
+- Student-test candidate probability scoring took 8.76 ms and 9.01 ms across the
+  full partition in this run. These timings exclude feature generation and decoding.
+
+The search took 121 seconds, including fold fits and scoring. The full run took
+173 seconds, including data preparation, refits, and student-test evaluation.
+The small ranking gain came with slightly worse candidate classification and
+probability scores.
+
 ## Reconstruct a route
 
 Build GPS candidates and decode a directed route with the HMM. The command writes
