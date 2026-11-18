@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
 
-DEV_PARTITIONS_FOR_FITTING = ("training",)  # student test is for comparison only
+DEV_PARTITIONS_FOR_FITTING = ("train",)  # student test is for comparison only
 
 
 def trip_group_folds(frame: pd.DataFrame, n_splits: int = 5, seed: int = 42):
