@@ -30,7 +30,9 @@ reports/eda/trip_*/candidates.csv
 reports/eda/trip_*/observations.csv
 reports/eda/trip_*/labels.csv
 
-# Model artifacts are added deliberately by the owning member if size allows
+# Local model runs and weights
+/reports/model-training/
+/reports/model-training-smoke/
 *.joblib
 *.pkl
 

@@ -23,6 +23,14 @@ dev = [
 [project.scripts]
 pathsnap = "pathsnap:main"
 
+[project.optional-dependencies]
+models = [
+    "catboost>=1.2.10",
+    "joblib>=1.6.0",
+    "lightgbm>=4.7.0",
+    "xgboost>=3.4.1",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
