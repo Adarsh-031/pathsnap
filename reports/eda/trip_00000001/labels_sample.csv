@@ -1,0 +1,11 @@
+trip_id,observation_index,label_arc_id,route_position,label_dist_m,nearest_nonroute_dist_m,near_route_boundary,label_status,label_source
+00000001,0,64973,1,0.7227677834696241,15.13232128809321,0,ok,derived_monotone_route_alignment_v1
+00000001,1,64973,1,0.277460670075878,16.079744249469623,0,ok,derived_monotone_route_alignment_v1
+00000001,2,64973,1,1.8397646806533392,13.902872335565776,0,ok,derived_monotone_route_alignment_v1
+00000001,3,64973,1,6.147324158379267,9.52868056261729,0,ok,derived_monotone_route_alignment_v1
+00000001,4,64973,1,2.6522517533144616,18.276540743812713,0,ok,derived_monotone_route_alignment_v1
+00000001,5,64973,1,5.529617586426423,10.039363507577411,0,ok,derived_monotone_route_alignment_v1
+00000001,6,133948,2,2.4275475216978504,17.83088505650539,0,ok,derived_monotone_route_alignment_v1
+00000001,7,133949,3,3.467618629876174,11.819328146865358,0,ok,derived_monotone_route_alignment_v1
+00000001,8,139208,4,0.6309728964936214,15.830676052710619,0,ok,derived_monotone_route_alignment_v1
+00000001,9,139208,4,5.8120210099278955,9.335501516431556,1,ok,derived_monotone_route_alignment_v1

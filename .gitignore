@@ -1,2 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Environments and secrets
+.venv/
+venv/
+env/
+.env
+.env.*
+*.pem
+*.key
+secrets*
+
+# Raw / derived data (keep outside version control unless the team agrees)
+/data/
+*.track
+*.nodes
+*.arcs
+*.route
+*.zip
+
+# Large per-trip derived tables (summaries in reports/eda/*.csv stay tracked)
+reports/eda/trip_*/candidates.csv
+reports/eda/trip_*/observations.csv
+reports/eda/trip_*/labels.csv
+
+# Local model runs and weights
+/reports/model-training/
+/reports/model-training-smoke/
+*.joblib
+*.pkl
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
 
 /.venv/
