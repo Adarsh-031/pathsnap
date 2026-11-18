@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PathSnap | Evaluator</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #182235; background: #eef2f6; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { background: #17273c; color: white; padding: 22px max(24px, calc((100% - 1136px) / 2)); }
+    header strong { font-size: 1.25rem; letter-spacing: .02em; }
+    header span { margin-left: 12px; color: #cfdae8; font-size: .875rem; }
+    main { max-width: 1184px; margin: 0 auto; padding: 30px 24px; }
+    h1 { margin: 0 0 6px; font-size: 1.85rem; }
+    h2 { margin: 0 0 16px; font-size: 1.15rem; }
+    p { color: #465569; }
+    .panel { padding: 20px; margin-top: 18px; border: 1px solid #d5dee9; border-radius: 12px; background: white; }
+    form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    button, select { font: inherit; padding: 8px 12px; border-radius: 7px; min-height: 42px; }
+    select, button.secondary { background: white; color: #182235; border: 1px solid #98a9bc; }
+    button { background: #174c8a; color: white; border: 1px solid #174c8a; cursor: pointer; }
+    button:disabled, select:disabled { opacity: .55; cursor: default; }
+    #status { margin-bottom: 0; min-height: 1.4em; }
+    #status[data-error="true"] { color: #a41e21; }
+    .result-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, 240px); gap: 18px; }
+    iframe { display: block; width: 100%; height: min(60vh, 540px); min-height: 350px; border: 1px solid #d5dee9; border-radius: 8px; }
+    dl { margin: 0; }
+    dt { color: #465569; font-size: .875rem; margin-top: 12px; }
+    dd { margin: 3px 0 0; font-size: 1.15rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+    [hidden] { display: none !important; }
+    @media (max-width: 730px) { .result-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header><strong>PathSnap</strong><span>Evaluation console</span></header>
+  <main>
+    <h1>Evaluate a trip</h1>
+    <p>Select a trip from Laptop 1 to request a route prediction and its evaluation results.</p>
+    <section class="panel" aria-label="Trip selection">
+      <form id="trip-form">
+        <label for="trip">Trip ID</label>
+        <select id="trip" required disabled></select>
+        <button id="run" disabled>Run prediction</button>
+        <button id="reload" class="secondary" type="button">Reload trips</button>
+      </form>
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+    <section id="result" hidden>
+      <div class="result-grid">
+        <section class="panel">
+          <h2 id="result-title">Predicted route</h2>
+          <iframe id="map" title="Folium predicted route map" sandbox="allow-scripts"></iframe>
+        </section>
+        <section class="panel">
+          <h2>Backend results</h2>
+          <dl id="metrics"></dl>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script>
+    const trip = document.querySelector("#trip");
+    const run = document.querySelector("#run");
+    const reload = document.querySelector("#reload");
+    const status = document.querySelector("#status");
+    const result = document.querySelector("#result");
+    const map = document.querySelector("#map");
+    const metrics = document.querySelector("#metrics");
+    const formatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 });
+
+    function setStatus(text, error = false) {
+      status.textContent = text;
+      status.dataset.error = error;
+    }
+
+    function clearResult() {
+      result.hidden = true;
+      map.removeAttribute("srcdoc");
+      metrics.replaceChildren();
+    }
+
+    function setBusy(busy) {
+      trip.disabled = run.disabled = busy || !trip.options.length;
+      reload.disabled = busy;
+    }
+
+    async function request(path, options) {
+      let response;
+      try {
+        response = await fetch(path, options);
+      } catch {
+        throw new Error("Cannot reach the local UI. Check that Laptop 2's UI process is running.");
+      }
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "The request failed.");
+      return payload;
+    }
+
+    async function loadTrips() {
+      clearResult();
+      trip.replaceChildren();
+      setBusy(true);
+      setStatus("Connecting to Laptop 1 and loading trips…");
+      try {
+        const { trips } = await request("/api/trips");
+        trip.replaceChildren(...trips.map(id => new Option(id, id)));
+        setStatus(trips.length ? `${trips.length} trips available.` : "The backend returned no trips.");
+      } catch (error) {
+        setStatus(error.message, true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    document.querySelector("#trip-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const id = trip.value;
+      clearResult();
+      setBusy(true);
+      setStatus(`Laptop 1 is processing trip ${id}…`);
+      try {
+        const data = await request("/api/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trip_id: id }),
+        });
+        document.querySelector("#result-title").textContent = `Predicted route · Trip ${id}`;
+        for (const [label, value] of data.metrics) {
+          const title = document.createElement("dt");
+          const detail = document.createElement("dd");
+          title.textContent = label;
+          detail.textContent = label === "Accuracy" ? `${formatter.format(value * 100)}%` : formatter.format(value);
+          metrics.append(title, detail);
+        }
+        map.srcdoc = data.map_html;
+        result.hidden = false;
+        setStatus(`Trip ${id} completed.`);
+      } catch (error) {
+        setStatus(error.message, true);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    reload.addEventListener("click", loadTrips);
+    trip.addEventListener("change", clearResult);
+    loadTrips();
+  </script>
+</body>
+</html>
