@@ -59,6 +59,13 @@ def evaluate_trip(partition, trip_id, files, classifier, candidate_config, hmm_c
     # Reference files are opened after prediction.
     reference = read_route(files["route"])
     labels = derive_observation_labels(replace(trip, route=reference))
+    row = score_trip(partition, trip_id, observations, candidates, probabilities,
+                     decoded, reference, labels)
+    return {**row, "inference_ms": inference_ms}
+
+
+def score_trip(partition, trip_id, observations, candidates, probabilities,
+               decoded, reference, labels, *, graph=None):
     scorable = labels.loc[labels["label_status"].eq("ok")].set_index("observation_index")
     if scorable.empty:
         raise ValueError(f"{partition}/{trip_id} has no scorable observations")
@@ -91,8 +98,18 @@ def evaluate_trip(partition, trip_id, files, classifier, candidate_config, hmm_c
         top1_ordered_route_f1=ordered_f1(top1_sequence.tolist(), reference.tolist()),
         hmm_ordered_route_f1=ordered_f1(hmm_sequence, reference.tolist()),
         hmm_sections=len(decoded.sections),
-        inference_ms=inference_ms,
     )
+    if graph is not None:
+        no_gap = steps["gap_flag"].eq(0)
+        for method, arcs in (("top1", top1), ("hmm", hmm)):
+            arcs = arcs.reindex(steps.index)
+            previous = arcs.shift()
+            eligible = no_gap & arcs.notna() & previous.notna()
+            row[f"{method}_direct_pairs"] = int(eligible.sum())
+            row[f"{method}_direct_connected"] = sum(
+                a == b or graph.arcs[a].to_node == graph.arcs[b].from_node
+                for a, b in zip(previous[eligible], arcs[eligible], strict=True)
+            )
     return row
 
 
