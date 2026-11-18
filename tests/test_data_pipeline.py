@@ -5,6 +5,7 @@ plus a parallel road 40 m north. Route = forward arcs 0..4. Track drives along t
 road at 10 m/s with small offsets, so there are more observations than route entries.
 """
 
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -115,11 +116,33 @@ def test_labels_monotone_and_correct(tmp_path):
     expected = np.minimum((10 * np.arange(50) + 2) // 100, 4)
     assert (lab["label_arc_id"].to_numpy() == expected).mean() > 0.95
     assert set(lab["label_status"]) <= {"ok", "ambiguous", "far"}
+    assert lab.loc[10, "near_route_boundary"] == 1
+    assert lab.loc[10, "label_status"] == "ambiguous"
+    assert lab.loc[5, "label_status"] == "ok"
     _, cand = build_candidates(trip)
     cov = candidate_coverage(cand, lab)
     assert cov["miss_count_all"] == 0
     y = attach_training_target(cand, lab)
     assert "y" not in cand.columns and y.groupby(cand["observation_index"]).sum().eq(1).all()
+
+
+def test_labels_flag_nonadjacent_route_competitor(tmp_path):
+    trip = load_trip(write_trip(tmp_path), "00000007")
+    # Return on the same road after the outbound leg.
+    trip = replace(trip, route=np.r_[trip.route, 9:4:-1])
+    label = derive_observation_labels(trip).iloc[5]
+    assert label["label_arc_id"] == 0
+    assert label["near_route_boundary"] == 0
+    assert label["label_status"] == "ambiguous"
+
+
+def test_labels_ignore_repeated_arc_id_and_prioritize_far(tmp_path):
+    trip = load_trip(write_trip(tmp_path), "00000007")
+    labels = derive_observation_labels(replace(trip, route=np.array([0, 0])))
+    assert labels.loc[5, "near_route_boundary"] == 0
+    assert labels.loc[5, "label_status"] == "ok"
+    assert labels.loc[15, "nearest_nonroute_dist_m"] < labels.loc[15, "label_dist_m"]
+    assert labels.loc[15, "label_status"] == "far"
 
 
 def test_trip_group_folds_no_leak():

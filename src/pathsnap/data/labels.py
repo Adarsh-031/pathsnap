@@ -75,10 +75,16 @@ def derive_observation_labels(trip: Trip, cfg: LabelConfig = LabelConfig()) -> p
     rows = np.arange(n)
     lab_dist = d_route[rows, pos]
 
-    # adjacent route position nearly as close -> observation sits near an arc boundary/junction
-    prev_d = np.where(pos > 0, d_route[rows, np.maximum(pos - 1, 0)], np.inf)
-    next_d = np.where(pos < m - 1, d_route[rows, np.minimum(pos + 1, m - 1)], np.inf)
+    # Repeated positions for the same arc ID cannot change the observation's label.
+    prev_pos = np.maximum(pos - 1, 0)
+    next_pos = np.minimum(pos + 1, m - 1)
+    prev_d = np.where(route[prev_pos] != lab_arc, d_route[rows, prev_pos], np.inf)
+    next_d = np.where(route[next_pos] != lab_arc, d_route[rows, next_pos], np.inf)
     near_boundary = (np.minimum(prev_d, next_d) - lab_dist) <= cfg.ambiguity_margin_m
+
+    # Non-adjacent arcs can also pass near the observation, e.g. on a loop.
+    route_alt_min = np.min(d_route, axis=1, where=route != lab_arc[:, None], initial=np.inf)
+    route_alt_close = (route_alt_min - lab_dist) <= cfg.ambiguity_margin_m
 
     # nearest arc that is NOT on the route and NOT the reverse twin of the label arc
     fr = trip.arcs["from_node"].to_numpy()
@@ -92,8 +98,9 @@ def derive_observation_labels(trip: Trip, cfg: LabelConfig = LabelConfig()) -> p
     np.minimum.at(alt_min, o[ok], d[ok])
     alt_close = (alt_min - lab_dist) <= cfg.ambiguity_margin_m
 
+    # The all-route comparison includes the adjacent arcs flagged by near_boundary.
     status = np.where(lab_dist > cfg.far_threshold_m, "far",
-                      np.where(alt_close, "ambiguous", "ok"))
+                      np.where(route_alt_close | alt_close, "ambiguous", "ok"))
     return pd.DataFrame({
         "trip_id": trip.trip_id,
         "observation_index": trip.observations["observation_index"].to_numpy(),
