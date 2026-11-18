@@ -45,20 +45,4 @@ The map uses Folium's default external browser assets and OpenStreetMap tiles. R
 
 ## Provisional API adapter — confirm with Member 3
 
-These response examples are UI development fixtures, **not verified backend responses or real predictions**. The UI has no mock-mode switch. The adapter is in `ui/app.py`; update it when the backend contract is confirmed.
-
-| Endpoint on Laptop 1 | Current provisional expectation |
-| --- | --- |
-| `GET /health` | HTTP 2xx; body not used |
-| `GET /trips` | `{"trips":["00000001"]}`; unique eight-digit ID strings |
-| `POST /predict` | JSON request `{"trip_id":"00000001"}`; response as below |
-
-```json
-{
-  "predicted_route": {"type": "LineString", "coordinates": [[8.59, 49.84], [8.60, 49.85]]},
-  "metrics": {"accuracy": 0.9, "matched_points": 90, "total_points": 100},
-  "timings_ms": {"inference": 125, "total": 180}
-}
-```
-
-The adapter accepts GeoJSON LineString or MultiLineString geometry in longitude/latitude order. Use a MultiLineString for route breaks so disconnected parts stay separate on the map. The provisional accuracy value is a fraction; confirm its meaning and denominator before the demo. The UI forwards only predicted geometry rendered as HTML and allowed numeric scores/timings to the browser. Laptop 1 must never send evaluator labels or reference geometry in its API responses.
+See the [Laptop 1 API handoff](laptop1_api.md) for example responses, route breaks, accuracy, timing units, and error statuses. The adapter is in `ui/app.py` and can be updated once Member 3 confirms the backend contract.
