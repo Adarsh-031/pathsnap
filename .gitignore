@@ -39,3 +39,5 @@ reports/eda/trip_*/labels.csv
 Thumbs.db
 .vscode/
 .idea/
+
+/.venv/
